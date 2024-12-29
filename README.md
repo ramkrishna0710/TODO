@@ -1,50 +1,135 @@
-# Welcome to your Expo app 👋
+# Setting up React Native Project with Expo and Redux Toolkit
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Follow the steps below to set up a React Native project using Expo, Redux Toolkit, and other necessary dependencies:
 
-## Get started
+## Prerequisites
 
-1. Install dependencies
+- Node.js installed on your system
+- Expo CLI installed globally (optional but recommended):
+  ```bash
+  npm install -g expo-cli
+  ```
 
-   ```bash
-   npm install
-   ```
+## Steps
 
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### 1. Create a New Expo Project
 
 ```bash
-npm run reset-project
+npx expo init my-project
+cd my-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Install Dependencies
 
-## Learn more
+Install Redux Toolkit, React-Redux, Redux Persist, and Async Storage:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm install @reduxjs/toolkit react-redux redux redux-persist @react-native-async-storage/async-storage
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 3. Configure Redux Toolkit and Persist
 
-## Join the community
+#### Create a `redux` folder in your project:
 
-Join our community of developers creating universal apps.
+```bash
+mkdir redux
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+#### Add the following files:
+
+- **`store.js`**:
+  ```javascript
+  import { configureStore } from '@reduxjs/toolkit';
+  import { persistStore, persistReducer } from 'redux-persist';
+  import storage from '@react-native-async-storage/async-storage';
+  import { combineReducers } from 'redux';
+
+  // Example slice
+  import exampleSlice from './exampleSlice';
+
+  const persistConfig = {
+    key: 'root',
+    storage,
+  };
+
+  const rootReducer = combineReducers({
+    example: exampleSlice,
+  });
+
+  const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+  export const store = configureStore({
+    reducer: persistedReducer,
+  });
+
+  export const persistor = persistStore(store);
+  ```
+
+- **`exampleSlice.js`**:
+  ```javascript
+  import { createSlice } from '@reduxjs/toolkit';
+
+  const exampleSlice = createSlice({
+    name: 'example',
+    initialState: { value: 0 },
+    reducers: {
+      increment: (state) => {
+        state.value += 1;
+      },
+      decrement: (state) => {
+        state.value -= 1;
+      },
+    },
+  });
+
+  export const { increment, decrement } = exampleSlice.actions;
+  export default exampleSlice.reducer;
+  ```
+
+#### Wrap Your App with Providers:
+
+Modify `App.js` to include the Redux Provider and PersistGate:
+
+```javascript
+import React from 'react';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './redux/store';
+import Main from './Main'; // Your main component
+
+export default function App() {
+  return (
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <Main />
+      </PersistGate>
+    </Provider>
+  );
+}
+```
+
+### 4. Build the Project for Distribution
+
+Expo provides an easy way to build your project for distribution without ejecting or using `prebuild`. Use Expo's build services:
+
+#### Android Build:
+
+```bash
+npx expo build:android
+```
+
+#### iOS Build:
+
+```bash
+npx expo build:ios
+```
+
+Expo will guide you through the build process, and the resulting APK or IPA file will be available for download once the build is complete.
+
+## Additional Notes
+
+- Ensure you have an Expo account and are logged in to use Expo build services.
+- Test your app thoroughly before distributing the APK or IPA.
+
+---
+Your React Native project is now set up with Redux Toolkit, Redux Persist, and Async Storage, and you can build it using Expo!
